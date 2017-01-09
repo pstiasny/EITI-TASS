@@ -1,0 +1,12 @@
+click==6.6
+Flask==0.12
+Flask-SQLAlchemy==2.1
+GeoAlchemy2==0.4.0
+itsdangerous==0.24
+Jinja2==2.8.1
+MarkupSafe==0.23
+psycopg2==2.6.2
+pyshp==1.2.10
+Shapely==1.5.17.post1
+SQLAlchemy==1.1.4
+Werkzeug==0.11.15

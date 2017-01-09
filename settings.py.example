@@ -1,0 +1,2 @@
+SQLALCHEMY_DATABASE_URI = 'postgres://user:pass@localhost/baza'
+GOOGLE_MAPS_API_KEY = 'klucz'

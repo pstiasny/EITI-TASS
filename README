@@ -1,0 +1,36 @@
+Projekt TASS zima 2016
+
+Paweł Stiasny
+Eugeniusz Paseka
+
+
+Instalacja i uruchomienie
+=========================
+
+Do uruchomienia konieczne są:
+
+* Postgres z włączonym rozszerzeniem PostGIS
+* Klucz API Google Maps
+* Python 2 i moduł virtualenv
+
+Wprowadź schemat bazy:
+
+    $ psql <parametry połączenia> < tass.schema.sql
+
+Utwórz środowisko wirutalne Pythona:
+
+    $ virtualenv .ve
+    $ source .ve/bin/activate
+
+Zainstaluj zależności:
+
+    $ pip install -r requirements.txt
+
+Utwórz konfigurację aplikacji:
+
+    $ cp settings.py.example settings.py
+    $ vi settings.py
+
+Uruchom serwer developerski:
+
+    $ python main.py
