@@ -20,6 +20,7 @@ class County(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(120))
     border = db.Column(Geometry('MULTIPOLYGON'))
+    avg_salary = db.Column(db.Numeric(8, 2))
 
 
 @app.route('/')
@@ -31,15 +32,20 @@ def entry_point():
 
 @app.route('/regions/')
 def list_regions():
-    polys = []
+    regions = []
     for county in County.query.all():
         region_shape = wkb.loads(bytes(county.border.data))
         for geom in region_shape.geoms:
-            polys.append([
+            poly = [
                 {'lat': lat, 'lng': lng}
                 for lng, lat in geom.exterior.coords
-            ])
-    return jsonify(polys)
+            ]
+            regions.append({
+                'name': county.name,
+                'avg_salary': float(county.avg_salary),
+                'poly': poly,
+            })
+    return jsonify(regions)
 
 
 if __name__ == '__main__':

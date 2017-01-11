@@ -77,7 +77,7 @@ SET default_with_oids = false;
 
 CREATE TABLE counties2 (
     id integer NOT NULL,
-    geom geometry(MultiPolygon,4326),
+    geom geometry(MultiPolygon,2180),
     iip_przest character varying(254),
     iip_identy character varying(254),
     iip_wersja character varying(254),
@@ -113,14 +113,30 @@ CREATE TABLE counties2 (
 ALTER TABLE counties2 OWNER TO postgres;
 
 --
--- Name: counties; Type: VIEW; Schema: public; Owner: postgres
+-- Name: wynagrodzenia; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE VIEW counties AS
+CREATE TABLE wynagrodzenia (
+    kod character varying(10) NOT NULL,
+    nazwa character varying(254),
+    srednie_wynagrodzenie numeric(8,2)
+);
+
+
+ALTER TABLE wynagrodzenia OWNER TO postgres;
+
+--
+-- Name: counties; Type: MATERIALIZED VIEW; Schema: public; Owner: postgres
+--
+
+CREATE MATERIALIZED VIEW counties AS
  SELECT counties2.id,
     counties2.jpt_nazwa_ AS name,
-    st_simplify(counties2.geom, (0.01)::double precision) AS border
-   FROM counties2;
+    st_simplify(st_transform(counties2.geom, 4326), (0.01)::double precision) AS border,
+    w.srednie_wynagrodzenie AS avg_salary
+   FROM (counties2
+     JOIN wynagrodzenia w ON ((((counties2.jpt_kod_je)::text || '000'::text) = (w.kod)::text)))
+  WITH NO DATA;
 
 
 ALTER TABLE counties OWNER TO postgres;
@@ -207,6 +223,14 @@ ALTER TABLE ONLY counties2
 
 ALTER TABLE ONLY skills
     ADD CONSTRAINT skills_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: wynagrodzenia wynagrodzenia_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY wynagrodzenia
+    ADD CONSTRAINT wynagrodzenia_pkey PRIMARY KEY (kod);
 
 
 --
