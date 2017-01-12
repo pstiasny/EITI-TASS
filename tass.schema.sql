@@ -72,6 +72,18 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: cities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE cities (
+    name character varying(256) NOT NULL,
+    coords geometry(Point)
+);
+
+
+ALTER TABLE cities OWNER TO postgres;
+
+--
 -- Name: counties2; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -167,18 +179,19 @@ ALTER SEQUENCE counties2_id_seq OWNED BY counties2.id;
 --
 
 CREATE TABLE skills (
-    id integer NOT NULL,
-    name character varying(120)
+    skill_id integer NOT NULL,
+    skill_name text,
+    description character varying(128)
 );
 
 
 ALTER TABLE skills OWNER TO postgres;
 
 --
--- Name: skills_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: skills_skill_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE skills_id_seq
+CREATE SEQUENCE skills_skill_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -186,13 +199,73 @@ CREATE SEQUENCE skills_id_seq
     CACHE 1;
 
 
-ALTER TABLE skills_id_seq OWNER TO postgres;
+ALTER TABLE skills_skill_id_seq OWNER TO postgres;
 
 --
--- Name: skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: skills_skill_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE skills_id_seq OWNED BY skills.id;
+ALTER SEQUENCE skills_skill_id_seq OWNED BY skills.skill_id;
+
+
+--
+-- Name: user_friends; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE user_friends (
+    user_id integer NOT NULL,
+    friend_id integer NOT NULL
+);
+
+
+ALTER TABLE user_friends OWNER TO postgres;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE users (
+    user_id integer NOT NULL,
+    name character varying(128),
+    city character varying(256),
+    district character varying(128),
+    link text
+);
+
+
+ALTER TABLE users OWNER TO postgres;
+
+--
+-- Name: users_skills; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE users_skills (
+    user_id integer NOT NULL,
+    skill_id integer NOT NULL
+);
+
+
+ALTER TABLE users_skills OWNER TO postgres;
+
+--
+-- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE users_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE users_user_id_seq OWNER TO postgres;
+
+--
+-- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE users_user_id_seq OWNED BY users.user_id;
 
 
 --
@@ -203,10 +276,25 @@ ALTER TABLE ONLY counties2 ALTER COLUMN id SET DEFAULT nextval('counties2_id_seq
 
 
 --
--- Name: skills id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: skills skill_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('skills_id_seq'::regclass);
+ALTER TABLE ONLY skills ALTER COLUMN skill_id SET DEFAULT nextval('skills_skill_id_seq'::regclass);
+
+
+--
+-- Name: users user_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users ALTER COLUMN user_id SET DEFAULT nextval('users_user_id_seq'::regclass);
+
+
+--
+-- Name: cities cities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY cities
+    ADD CONSTRAINT cities_pkey PRIMARY KEY (name);
 
 
 --
@@ -222,7 +310,31 @@ ALTER TABLE ONLY counties2
 --
 
 ALTER TABLE ONLY skills
-    ADD CONSTRAINT skills_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT skills_pkey PRIMARY KEY (skill_id);
+
+
+--
+-- Name: user_friends user_friends_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY user_friends
+    ADD CONSTRAINT user_friends_pkey PRIMARY KEY (user_id, friend_id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (user_id);
+
+
+--
+-- Name: users_skills users_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users_skills
+    ADD CONSTRAINT users_skills_pkey PRIMARY KEY (user_id, skill_id);
 
 
 --
@@ -231,6 +343,45 @@ ALTER TABLE ONLY skills
 
 ALTER TABLE ONLY wynagrodzenia
     ADD CONSTRAINT wynagrodzenia_pkey PRIMARY KEY (kod);
+
+
+--
+-- Name: idx_cities_coords; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_cities_coords ON cities USING gist (coords);
+
+
+--
+-- Name: user_friends user_friends_friend_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY user_friends
+    ADD CONSTRAINT user_friends_friend_id_fkey FOREIGN KEY (friend_id) REFERENCES users(user_id);
+
+
+--
+-- Name: user_friends user_friends_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY user_friends
+    ADD CONSTRAINT user_friends_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id);
+
+
+--
+-- Name: users_skills users_skills_skill_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users_skills
+    ADD CONSTRAINT users_skills_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES skills(skill_id);
+
+
+--
+-- Name: users_skills users_skills_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY users_skills
+    ADD CONSTRAINT users_skills_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(user_id);
 
 
 --

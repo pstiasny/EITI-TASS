@@ -7,6 +7,7 @@ Jinja2==2.8.1
 MarkupSafe==0.23
 psycopg2==2.6.2
 pyshp==1.2.10
+requests==2.12.4
 Shapely==1.5.17.post1
 SQLAlchemy==1.1.4
 Werkzeug==0.11.15

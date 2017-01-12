@@ -2,14 +2,52 @@
 
 function initMap() {
     var controlDiv = document.createElement('div');
-    var skillInput = document.createElement('input');
-    skillInput.classList.add('skill-input');
-    skillInput.placeholder = "Wyszukaj umiejętności programistyczne";
-    controlDiv.appendChild(skillInput);
+    controlDiv.classList.add('skill-control');
+    var form = document.createElement('form')
+    controlDiv.appendChild(form);
 
-    skillInput.addEventListener('input', function(event) {
-        // TODO
+    var skillInput = document.createElement('input');
+    var skillDataList = document.createElement('datalist');
+    skillDataList.id = 'skill-input-data-list';
+    form.appendChild(skillDataList);
+
+    fetch('/skills/')
+    .then(function(result) { return result.json() })
+    .then(function(skills) {
+        skills.forEach(function(skill) {
+            var option = document.createElement('option')
+            option.value = skill.name;
+            skillDataList.appendChild(option);
+        });
     });
+
+    skillInput.classList.add('skill-input');
+    skillInput.setAttribute('list', 'skill-input-data-list');
+    skillInput.placeholder = "Wyszukaj umiejętności programistyczne";
+    form.appendChild(skillInput);
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/skills/' + encodeURIComponent(skillInput.value))
+        .then(function(result) { return result.json() })
+        .then(function(skill) {
+            document.title = skill.name;
+            console.log('results for', skill.name);
+            console.log(skill);
+            skill.city_counts.forEach(function(cc) {
+                var marker = new google.maps.Marker({
+                    position: cc.coords,
+                    map: map,
+                    title: cc.city
+                });
+            });
+        });
+    });
+
+    var skillSubmit = document.createElement('input')
+    skillSubmit.setAttribute('type', 'submit');
+    skillSubmit.value = 'Szukaj';
+    form.appendChild(skillSubmit);
 
     var map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 52.2, lng: 21},
@@ -28,7 +66,6 @@ function initMap() {
     .then(function(regions) {
         var minSalary = Math.min(...regions.map(r => r.avg_salary));
         var maxSalary = Math.max(...regions.map(r => r.avg_salary));
-        console.log(minSalary, maxSalary);
 
         regions.forEach(function(region) {
             var k = (region.avg_salary - minSalary) / (maxSalary - minSalary);
