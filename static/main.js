@@ -26,6 +26,7 @@ function initMap() {
     skillInput.placeholder = "Wyszukaj umiejętności programistyczne";
     form.appendChild(skillInput);
 
+    var markersOnMap = [];
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         fetch('/skills/' + encodeURIComponent(skillInput.value))
@@ -34,12 +35,16 @@ function initMap() {
             document.title = skill.name;
             console.log('results for', skill.name);
             console.log(skill);
+            markersOnMap.forEach(function(marker) {
+                marker.setMap(null);
+            });
             skill.city_counts.forEach(function(cc) {
                 var marker = new google.maps.Marker({
                     position: cc.coords,
                     map: map,
                     title: cc.city
                 });
+                markersOnMap.push(marker);
             });
         });
     });
