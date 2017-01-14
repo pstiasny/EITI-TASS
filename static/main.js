@@ -27,14 +27,13 @@ function initMap() {
     form.appendChild(skillInput);
 
     var markersOnMap = [];
+    var connectionsOnMap = [];
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         fetch('/skills/' + encodeURIComponent(skillInput.value))
         .then(function(result) { return result.json() })
         .then(function(skill) {
             document.title = skill.name;
-            console.log('results for', skill.name);
-            console.log(skill);
             markersOnMap.forEach(function(marker) {
                 marker.setMap(null);
             });
@@ -45,6 +44,21 @@ function initMap() {
                     title: cc.city
                 });
                 markersOnMap.push(marker);
+            });
+
+            connectionsOnMap.forEach(function(connection) {
+                connection.setMap(null);
+            });
+            skill.city_connections.forEach(function(points) {
+                var connection = new google.maps.Polyline({
+                    path: points,
+                    geodesic: true,
+                    strokeColor: '#0000FF',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2,
+                    map: map
+                });
+                connectionsOnMap.push(connection);
             });
         });
     });

@@ -15,6 +15,12 @@ users_skills_table = db.Table('users_skills', db.Model.metadata,
 )
 
 
+user_friends_table = db.Table('user_friends', db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id')),
+    db.Column('friend_id', db.Integer, db.ForeignKey('users.user_id'))
+)
+
+
 class Skill(db.Model):
     __tablename__ = 'skills'
     id = db.Column('skill_id', db.Integer(), primary_key=True)
@@ -74,10 +80,29 @@ def describe_skill(skill_name):
         .filter(Skill.id == skill.id) \
         .group_by(City.name)
 
-    def _wkb_to_json(wkb_):
-        point = wkb.loads(bytes(wkb_))
-        return {'lng': point.x,
-                'lat': point.y}
+    c1 = db.alias(City, 'c1')
+    c2 = db.alias(City, 'c2')
+    u1 = db.alias(User, 'u1')
+    u2 = db.alias(User, 'u2')
+    us1 = db.alias(users_skills_table, 'us1')
+    us2 = db.alias(users_skills_table, 'us2')
+    city_connections = db.session.query(
+            c1.c.coords, c2.c.coords) \
+        .distinct(c1.c.coords, c2.c.coords) \
+        .filter(
+            c1.c.name == u1.c.city,
+            c2.c.name == u2.c.city,
+            user_friends_table.c.user_id == u1.c.user_id,
+            user_friends_table.c.friend_id == u2.c.user_id,
+            u1.c.user_id == us1.c.user_id,
+            u2.c.user_id == us2.c.user_id,
+            us1.c.skill_id == skill.id,
+            us2.c.skill_id == skill.id)
+
+    city_connections_json = [
+        [_wkb_to_json(coords1.data), _wkb_to_json(coords2.data)]
+        for coords1, coords2 in city_connections
+    ]
 
     return jsonify({
         'name': skill.name,
@@ -86,6 +111,7 @@ def describe_skill(skill_name):
              'coords': _wkb_to_json(coords.data)}
             for cname, ccount, coords in city_counts
         ],
+        'city_connections': city_connections_json,
     })
 
 
@@ -105,6 +131,11 @@ def list_regions():
                 'poly': poly,
             })
     return jsonify(regions)
+
+
+def _wkb_to_json(wkb_):
+    point = wkb.loads(bytes(wkb_))
+    return {'lng': point.x, 'lat': point.y}
 
 
 if __name__ == '__main__':
