@@ -41,7 +41,7 @@ function initMap() {
                 var marker = new google.maps.Marker({
                     position: cc.coords,
                     map: map,
-                    title: cc.city
+                    label: '' + cc.count,
                 });
                 markersOnMap.push(marker);
             });

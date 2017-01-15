@@ -71,14 +71,13 @@ def list_skills():
 def describe_skill(skill_name):
     skill = Skill.query.filter_by(name=skill_name).first_or_404()
     city_counts = db.session.query(
-            City.name,
-            db.func.count(User.id),
-            City.coords) \
+            City.coords,
+            db.func.count(User.id)) \
         .join(User, City.name == User.city) \
         .join(users_skills_table) \
         .join(Skill) \
         .filter(Skill.id == skill.id) \
-        .group_by(City.name)
+        .group_by(City.coords)
 
     c1 = db.alias(City, 'c1')
     c2 = db.alias(City, 'c2')
@@ -107,9 +106,9 @@ def describe_skill(skill_name):
     return jsonify({
         'name': skill.name,
         'city_counts': [
-            {'city': cname, 'count': ccount,
+            {'count': ccount,
              'coords': _wkb_to_json(coords.data)}
-            for cname, ccount, coords in city_counts
+            for coords, ccount in city_counts
         ],
         'city_connections': city_connections_json,
     })
