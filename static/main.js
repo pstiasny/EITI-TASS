@@ -42,8 +42,31 @@ function initMap() {
                     position: cc.coords,
                     map: map,
                     label: '' + cc.count,
+                    title: cc.name,
                 });
                 markersOnMap.push(marker);
+
+                marker.addListener('click', function() {
+                    fetch(
+                        '/skills/' + encodeURIComponent(skill.name) +
+                        '/cities/' + encodeURIComponent(marker.title))
+                    .then(function(result) { return result.json() })
+                    .then(function(users) {
+                        var content =
+                            '<h1>' + marker.title + '</h1><ul>' +
+                            users
+                            .map(u =>
+                                '<li><a target="_blank" href="' + u.link + '">' +
+                                    u.name +
+                                '</a></li>')
+                            .join('') +
+                            '</ul>';
+                        var infoWindow = new google.maps.InfoWindow({
+                            content: content,
+                        });
+                        infoWindow.open(map, marker);
+                    });
+                });
             });
 
             connectionsOnMap.forEach(function(connection) {

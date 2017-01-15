@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
 from shapely import wkb
+from sqlalchemy.dialects.postgresql import array_agg
 
 
 app = Flask('tass')
@@ -72,7 +73,8 @@ def describe_skill(skill_name):
     skill = Skill.query.filter_by(name=skill_name).first_or_404()
     city_counts = db.session.query(
             City.coords,
-            db.func.count(User.id)) \
+            db.func.count(User.id),
+            array_agg(City.name)) \
         .join(User, City.name == User.city) \
         .join(users_skills_table) \
         .join(Skill) \
@@ -106,12 +108,31 @@ def describe_skill(skill_name):
     return jsonify({
         'name': skill.name,
         'city_counts': [
-            {'count': ccount,
+            {'name': names[0],
+             'count': ccount,
              'coords': _wkb_to_json(coords.data)}
-            for coords, ccount in city_counts
+            for coords, ccount, names in city_counts
         ],
         'city_connections': city_connections_json,
     })
+
+
+@app.route('/skills/<skill_name>/cities/<city_name>')
+def describe_region(skill_name, city_name):
+    skill = Skill.query.filter_by(name=skill_name).first_or_404()
+    users = db.engine.execute(db.text('''
+        SELECT u.name, u.link
+        FROM users u 
+        JOIN cities c on u.city = c.name 
+        JOIN cities c1 on c1.coords = c.coords 
+        JOIN users_skills us ON us.user_id = u.user_id 
+        WHERE c1.name = :city_name 
+        AND us.skill_id = :skill_id;
+    '''), {'city_name': city_name, 'skill_id': skill.id})
+    return jsonify([
+        {'name': name, 'link': link}
+        for name, link in users
+    ])
 
 
 @app.route('/regions/')
